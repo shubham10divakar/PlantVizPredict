@@ -8,6 +8,7 @@ import seaborn as sns
 import os
 from PIL import Image
 import random
+from plantdoc_predictor import PlantDocPredictor
 
 initial_dataset_name = "nodataset"
 # Predefined datasets
@@ -64,6 +65,49 @@ def display_images_gallery(images, category, num_images=100000, num_columns=5):
 def display_csv_data(data):
     #st.write("### Plant NPK")
     st.dataframe(data)
+
+def run_prediction_section():
+    """
+    Handles the Prediction section of the Streamlit app.
+    Allows users to upload image or CSV data for plant disease prediction.
+    """
+    st.title("🌿 Plant Disease Prediction")
+
+    # Choose input type
+    input_type = st.radio("Choose Input Type:", ["Image", "CSV Data"], horizontal=True)
+
+    # --- Image Prediction ---
+    if input_type == "Image":
+        uploaded_file = st.file_uploader("Upload a Leaf Image", type=["jpg", "jpeg", "png"])
+
+        if uploaded_file is not None:
+            image = Image.open(uploaded_file)
+            st.image(image, caption="Uploaded Image", use_column_width=True)
+
+            if st.button("Predict Disease"):
+                try:
+                    predictor = PlantDocPredictor()
+                    result = predictor.predict(image)  # Your pip package’s prediction method
+                    st.success(f"🌱 Predicted Disease: **{result}**")
+                except Exception as e:
+                    st.error(f"⚠️ Prediction failed: {e}")
+
+    # --- CSV Prediction ---
+    elif input_type == "CSV Data":
+        uploaded_csv = st.file_uploader("Upload CSV Data", type=["csv"])
+
+        if uploaded_csv is not None:
+            try:
+                data = pd.read_csv(uploaded_csv)
+                st.write("### Uploaded Data:")
+                st.dataframe(data)
+
+                if st.button("Predict from CSV"):
+                    predictor = PlantDocPredictor()
+                    result = predictor.predict_csv(data)  # assuming you have this method
+                    st.success(f"📊 Predicted Disease (from CSV): **{result}**")
+            except Exception as e:
+                st.error(f"⚠️ Error reading CSV: {e}")
 
 # Display data
 def display_data():
@@ -229,13 +273,14 @@ def main():
         #model, accuracy = train_model(data)
         #st.write(f"### Model Accuracy: {accuracy * 100:.2f}%")
     elif section == "Prediction":
+        run_prediction_section()
         #st.write("### Predict Plant Disease")
         #input_data = [st.number_input(f'Feature {i}', min_value=0.0, max_value=1.0, value=0.5) for i in range(data.shape[1] - 1)]
         #if st.button("Predict"):
          #   model, _ = train_model(data)  # Ensure the model is trained
           #  prediction = predict_disease(model, input_data)
            # st.write(f"Predicted Disease: {prediction[0]}")
-           st.write('Under Development')
+           #st.write('Under Development')
     elif section == "Visualization":
         #visualize_data()
         st.write('Under Development')
